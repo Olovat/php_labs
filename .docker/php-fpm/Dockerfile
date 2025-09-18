@@ -13,7 +13,11 @@ COPY . /app
 
 FROM php:8.4-fpm-alpine
 
-RUN apk add --no-cache libzip
+#добавление pdo_mysql для работы с БД
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS mariadb-dev \
+    && docker-php-ext-install pdo_mysql \
+    && apk del .build-deps \
+    && apk add --no-cache libzip
 
 WORKDIR /var/www/html
 COPY --from=builder /app /var/www/html
