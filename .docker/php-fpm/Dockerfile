@@ -4,6 +4,7 @@ RUN apk add --no-cache curl git libzip-dev zip unzip autoconf make gcc g++ musl-
  && docker-php-ext-configure zip \
  && docker-php-ext-install zip
 
+#не забыть что для 3 лабы надо в сборку composer включать
 WORKDIR /app
 COPY composer.json composer.lock* /app/
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
@@ -13,9 +14,8 @@ COPY . /app
 
 FROM php:8.4-fpm-alpine
 
-#добавление pdo_mysql для работы с БД
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS mariadb-dev \
-    && docker-php-ext-install pdo_mysql \
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS mariadb-dev libzip-dev \
+    && docker-php-ext-install mysqli pdo_mysql \
     && apk del .build-deps \
     && apk add --no-cache libzip
 
