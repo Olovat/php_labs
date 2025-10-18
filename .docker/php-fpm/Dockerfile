@@ -12,11 +12,22 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 COPY . /app
 
 FROM php:8.4-fpm-alpine
+#С 3 лабы никакх изменений в образе сборки 
+# установить Composer в финальном образе (чтобы он был в PATH после сборки)
+RUN apk add --no-cache curl unzip \
+ && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+ && chmod +x /usr/local/bin/composer
 
-RUN apk add --no-cache libzip
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS mariadb-dev libzip-dev \
+    && docker-php-ext-install mysqli pdo_mysql \
+    && apk del .build-deps \
+    && apk add --no-cache libzip
 
 WORKDIR /var/www/html
-COPY --from=builder /app /var/www/html
+COPY --from=builder /app /var/www/html  
+
+COPY --from=builder /usr/local/bin/composer /usr/local/bin/composer
+RUN chmod +x /usr/local/bin/composer || true
 
 RUN chown -R www-data:www-data /var/www/html || true
 
